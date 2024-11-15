@@ -1,0 +1,9 @@
+exclude_path = [
+]
+exclude = [
+    # Bot prevention times out
+    '.*twitter\.com.*',
+    # Repo not public yet
+    '.*github\.com/tivet-gg/hub.*',
+]
+exclude_all_private = true
