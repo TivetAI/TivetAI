@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "esnext",
+		"strict": true,
+		"skipLibCheck": true,
+		"esModuleInterop": false,
+		"allowSyntheticDefaultImports": false,
+		"stripInternal": true,
+		"paths": {
+			"ext:tivet_kv/40_tivet_kv.js": ["./src/bridge/40_tivet_kv.ts"]
+		}
+	},
+	"include": ["src/**/*"]
+}
