@@ -1,0 +1,1 @@
+curl -fsSL https://releases.tivet.gg/tivet/latest/install.sh | sh

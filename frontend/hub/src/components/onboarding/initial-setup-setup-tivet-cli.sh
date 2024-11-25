@@ -1,0 +1,2 @@
+tivet init
+tivet deploy

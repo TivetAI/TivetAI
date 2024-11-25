@@ -1,0 +1,1 @@
+iwr https://releases.tivet.gg/tivet/latest/install.ps1 -useb | iex
