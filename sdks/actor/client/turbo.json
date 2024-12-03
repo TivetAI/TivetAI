@@ -1,0 +1,13 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"extends": ["//"],
+	"tasks": {
+		"build": {
+			"dependsOn": [
+				"@tivet-gg/actor-common#build",
+				"@tivet-gg/actor-protocol#build",
+				"@tivet-gg/manager-protocol#build"
+			]
+		}
+	}
+}
