@@ -1,0 +1,12 @@
+{
+	"name": "bare-template-js",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"dependencies": {
+		"@tivet-gg/actor": "workspace:*"
+	},
+	"devDependencies": {
+		"@tivet-gg/actor-client": "workspace:*"
+	}
+}
