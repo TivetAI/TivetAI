@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package tivet.backend.matchmaker.query;
+
+import "resources/legacy/proto/common.proto";
+
+enum JoinKind {
+	NORMAL = 0;
+	PARTY = 1;
+}
+
+message Direct {
+	tivet.common.Uuid lobby_id = 1;
+}
+
+message LobbyGroup {
+	repeated tivet.common.Uuid lobby_group_ids = 1;
+	repeated tivet.common.Uuid region_ids = 2;
+	AutoCreate auto_create = 3;
+}
+
+message AutoCreate {
+	tivet.common.Uuid lobby_group_id = 1;
+	tivet.common.Uuid region_id = 2;
+}
