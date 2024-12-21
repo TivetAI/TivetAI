@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package tivet.backend.game;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/upload.proto";
+
+message Game {
+	tivet.common.Uuid game_id = 1;
+	int64 create_ts = 2;
+	string name_id = 3;
+	string display_name = 4;
+	string url = 5;
+	tivet.common.Uuid developer_team_id = 6;
+	string description = 7;
+	repeated string tags = 8;
+	
+	optional tivet.common.Uuid logo_upload_id = 9;
+	optional string logo_file_name = 10;
+	optional upload.Provider logo_provider = 15;
+	optional tivet.common.Uuid banner_upload_id = 11;
+	optional string banner_file_name = 12;
+	optional upload.Provider banner_provider = 16;
+}
+
+message Version {
+	tivet.common.Uuid version_id = 1;
+	tivet.common.Uuid game_id = 2;
+	int64 create_ts = 3;
+	string display_name = 4;
+}
+
+message Namespace {
+	tivet.common.Uuid namespace_id = 1;
+	tivet.common.Uuid game_id = 2;
+	int64 create_ts = 3;
+	string display_name = 4;
+	tivet.common.Uuid version_id = 5;
+	string name_id = 6;
+}
