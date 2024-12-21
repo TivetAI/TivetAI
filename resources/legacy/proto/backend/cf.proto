@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package tivet.backend.cf;
+
+import "resources/legacy/proto/common.proto";
+
+message CustomHostname {
+    enum Status {
+        PENDING = 0;
+        ACTIVE = 1;
+        FAILED = 2;
+    }
+
+    tivet.common.Uuid identifier = 1;
+    tivet.common.Uuid namespace_id = 2;
+    string hostname = 3;
+    tivet.common.Uuid challenge = 4;
+    int64 create_ts = 5;
+    Status status = 6;
+    tivet.common.Uuid subscription_id = 7;
+}
