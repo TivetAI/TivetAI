@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package tivet.backend.user.update;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/user.proto";
+
+message Update {
+	reserved 2, 3, 4, 5;
+
+	oneof kind {
+		UserUpdate update = 1;
+	}
+}
+
+message UserUpdate {
+	reserved 1;
+}
+

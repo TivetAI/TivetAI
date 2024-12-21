@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package tivet.backend.user.event;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/user.proto";
+
+message Event {
+	reserved 3, 4, 6;
+
+	oneof kind {
+		UserUpdate user_update = 5;
+		TeamMemberRemove team_member_remove = 7;
+	}
+}
+
+message UserUpdate {
+	
+}
+
+message TeamMemberRemove {
+	tivet.common.Uuid team_id = 1;
+}
