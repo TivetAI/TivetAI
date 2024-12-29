@@ -1,0 +1,13 @@
+{
+	"name": "mcp-servlet",
+	"version": "1.0.0",
+	"private": true,
+	"dependencies": {
+		"@tivet-gg/actor": "workspace:*",
+		"hono": "^4.6.17"
+	},
+	"devDependencies": {
+		"@tivet-gg/actor-client": "workspace:*",
+		"@tivet-gg/api": "^24.6.2"
+	}
+}
