@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package tivet.backend.user_identity;
+
+message Identity {
+	message Email {
+		string email = 1;
+	}
+
+	message DefaultUser {
+
+	}
+
+	reserved 2;
+
+	oneof kind {
+		Email email = 1;
+		DefaultUser default_user = 3;
+	}
+}
