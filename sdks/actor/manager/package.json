@@ -1,0 +1,11 @@
+{
+	"name": "@tivet-gg/actor-manager",
+	"version": "5.1.2",
+	"private": true,
+	"dependencies": {
+		"@tivet-gg/actor-common": "workspace:*",
+		"@tivet-gg/manager-protocol": "workspace:*",
+		"hono": "^4.6.17",
+		"ts-dedent": "^2.2.0"
+	}
+}
