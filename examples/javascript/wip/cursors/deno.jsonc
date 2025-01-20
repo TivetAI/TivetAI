@@ -1,0 +1,16 @@
+{
+	"imports": {
+		"@core/asyncutil": "jsr:@core/asyncutil@^1.2.0",
+		"@tivet-gg/api": "npm:@tivet-gg/api@0.0.1-rc.5",
+		"@std/assert": "jsr:@std/assert@^1.0.8",
+		"@std/async": "jsr:@std/async@^1.0.9",
+		"hono": "jsr:@hono/hono@^4.6.12",
+		"@tivet-gg/actor-core": "../../sdks/actors/core/src/mod.ts",
+		"@tivet-gg/actor": "../../sdks/actors/runtime/src/mod.ts",
+		"@tivet-gg/actor-client": "../../sdks/actors/client/src/mod.ts",
+		"on-change": "npm:on-change@^5.0.1"
+	},
+	"fmt": {
+		"useTabs": true
+	}
+}

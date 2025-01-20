@@ -1,0 +1,6 @@
+{
+	"imports": {
+		"@tivet-gg/actor": "jsr:@tivet-gg/actor",
+		"@tivet-gg/actor-client": "jsr:@tivet-gg/actor-client"
+	}
+}
