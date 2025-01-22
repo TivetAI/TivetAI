@@ -1,0 +1,47 @@
+[package]
+name = "api-job"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+api-helper.workspace = true
+async-trait = "0.1"
+chirp-client.workspace = true
+tivet-operation.workspace = true
+chrono = "0.4"
+http = "0.2"
+hyper = { version = "0.14", features = ["server", "http1", "stream", "tcp"] }
+lazy_static = "1.4"
+prost = "0.10"
+tivet-cache.workspace = true
+tivet-claims.workspace = true
+tivet-health-checks.workspace = true
+tivet-job-server.workspace = true
+tivet-pools.workspace = true
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+tokio = { version = "1.40" }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+    "fmt",
+    "json",
+    "ansi",
+] }
+url = "2.2.2"
+uuid = { version = "1", features = ["v4"] }
+tivet-config.workspace = true
+tivet-env.workspace = true
+
+[dev-dependencies]
+tivet-connection.workspace = true
+tivet-job.workspace = true
+reqwest = "0.11"
+nomad-util.workspace = true
+nomad-client = "0.0.9"
+
+faker-job-run.workspace = true
+job-run.workspace = true
+token-create.workspace = true
