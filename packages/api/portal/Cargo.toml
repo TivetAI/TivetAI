@@ -1,0 +1,55 @@
+[package]
+name = "api-portal"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+tivet-convert.workspace = true
+api-helper.workspace = true
+async-trait = "0.1"
+chirp-client.workspace = true
+tivet-operation.workspace = true
+chrono = "0.4"
+futures-util = "0.3"
+http = "0.2"
+hyper = { version = "0.14", features = ["server", "http1", "stream", "tcp"] }
+lazy_static = "1.4"
+prost = "0.10"
+rand = { version = "0.8", features = ["small_rng"] }
+tivet-cache.workspace = true
+tivet-claims.workspace = true
+tivet-health-checks.workspace = true
+tivet-pools.workspace = true
+tivet-portal-server.workspace = true
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+tokio = { version = "1.40" }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+    "fmt",
+    "json",
+    "ansi",
+] }
+url = "2.2.2"
+uuid = { version = "1", features = ["v4"] }
+
+game-get.workspace = true
+game-resolve-name-id.workspace = true
+team-get.workspace = true
+team-member-count.workspace = true
+token-revoke.workspace = true
+user-get.workspace = true
+user-team-list.workspace = true
+tivet-config.workspace = true
+tivet-env.workspace = true
+
+[dev-dependencies]
+tivet-connection.workspace = true
+tivet-portal.workspace = true
+regex = "1.4"
+
+faker-user.workspace = true
+user-token-create.workspace = true
