@@ -1,0 +1,14 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"extends": ["//"],
+	"tasks": {
+		"build": {
+			"inputs": ["src/**", "./tsup.config.ts"],
+			"dependsOn": [
+				"@tivet-gg/actor-common#build",
+				"@tivet-gg/actor-core#build",
+				"@tivet-gg/actor-protocol#build"
+			]
+		}
+	}
+}
