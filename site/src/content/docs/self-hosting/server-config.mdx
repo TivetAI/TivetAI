@@ -1,0 +1,17 @@
+import { JsonSchemaPreview } from '@/components/JsonSchemaPreview';
+import SERVER_SPEC from './server-spec.json';
+import Link from 'next/link';
+
+# Server Config
+
+Default location: <Link href='https://github.com/tivet-gg/tivet/blob/main/docker/dev-full/tivet-server/config.yaml'>`docker/monolith/tivet-server/config.yaml`</Link>
+
+## Schema
+
+<JsonSchemaPreview className='not-prose' schema={SERVER_SPEC} />
+
+## Overriding
+
+Config properties can be overridden with environment variables:
+
+- `TIVET__SERVER__JWT__PRIVATE=value` overrides `jwt.private`.
