@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.custom_user_avatar.list_for_game;
+
+import "resources/legacy/proto/common.proto";
+
+message Request {
+	tivet.common.Uuid game_id = 1;
+}
+
+message Response {
+	message CustomAvatar {
+		tivet.common.Uuid upload_id = 1;
+	}
+
+	repeated CustomAvatar custom_avatars = 1;
+}

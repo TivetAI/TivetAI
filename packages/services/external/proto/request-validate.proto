@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.external.request_validate;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/net.proto";
+
+message Request {
+	tivet.backend.net.ExternalRequestConfig config = 1;
+}
+
+message Response {
+	repeated tivet.common.ValidationError errors = 1;
+}

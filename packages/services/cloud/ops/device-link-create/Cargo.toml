@@ -1,0 +1,17 @@
+[package]
+name = "cloud-device-link-create"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+tivet-operation.workspace = true
+chirp-client.workspace = true
+prost = "0.10"
+
+token-create.workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true
+tivet-claims.workspace = true

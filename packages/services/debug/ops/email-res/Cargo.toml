@@ -1,0 +1,21 @@
+[package]
+name = "debug-email-res"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+tivet-operation.workspace = true
+chirp-client.workspace = true
+prost = "0.10"
+rand = "0.8"
+serde_json = "1.0"
+
+[dependencies.sqlx]
+workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true
+
+email-verification-create.workspace = true

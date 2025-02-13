@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.job_run.msg.create;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/job.proto";
+
+/// name = "msg-job-run-create"
+/// parameters = [
+/// 	{ name = "run_id" },
+/// ]
+message Message {
+	reserved 2, 5, 7;
+
+	tivet.common.Uuid run_id = 1;
+	tivet.common.Uuid region_id = 3;
+	repeated tivet.backend.job.Parameter parameters = 4;
+	string job_spec_json = 8;
+	repeated tivet.backend.job.ProxiedPortConfig proxied_ports = 6;
+}

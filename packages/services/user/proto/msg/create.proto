@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.user.msg.create;
+
+import "resources/legacy/proto/common.proto";
+
+/// name = "msg-user-create"
+/// parameters = [
+/// 	{ name = "user_id" },
+/// ]
+message Message {
+	tivet.common.Uuid user_id = 1;
+	optional tivet.common.Uuid namespace_id = 2;
+	optional string display_name = 3;
+}

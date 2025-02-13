@@ -1,0 +1,14 @@
+[package]
+name = "redis-util"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+lazy_static = "1.4"
+regex = "1.5"
+
+[dependencies.redis]
+# TODO: https://github.com/tivet-gg/tivet/issues/508
+workspace = true

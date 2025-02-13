@@ -1,0 +1,31 @@
+[package]
+name = "chirp-perf"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+lazy_static = "1.4"
+prost = "0.10"
+types-proto.workspace = true
+tivet-metrics.workspace = true
+tivet-pools.workspace = true
+thiserror = "1.0"
+tokio = { version = "1.40", features = ["full", "tracing"] }
+tracing = "0.1"
+tivet-env.workspace = true
+
+[dependencies.uuid]
+version = "1.1"
+features = ["v4", "serde"]
+
+[dependencies.redis]
+# TODO: https://github.com/tivet-gg/tivet/issues/508
+workspace = true
+features = [
+	"keep-alive",
+	"aio",
+	"tokio-comp",
+	"tokio-native-tls-comp",
+]

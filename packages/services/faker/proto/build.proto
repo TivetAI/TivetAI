@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.faker.build;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/faker.proto";
+import "google/protobuf/empty.proto";
+
+message Request {
+	optional tivet.common.Uuid game_id = 1;
+	optional tivet.common.Uuid env_id = 4;
+	tivet.backend.faker.Image image = 2;
+	optional string fs_path = 3;
+}
+
+message Response {
+	optional tivet.common.Uuid build_id = 1;
+}

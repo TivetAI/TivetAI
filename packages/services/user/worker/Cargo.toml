@@ -1,0 +1,34 @@
+[package]
+name = "user-worker"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+tivet-convert.workspace = true
+chirp-client.workspace = true
+chirp-worker.workspace = true
+chrono = "0.4"
+lazy_static = "1.4.0"
+tivet-health-checks.workspace = true
+tivet-metrics.workspace = true
+tivet-runtime.workspace = true
+
+game-get.workspace = true
+game-namespace-get.workspace = true
+team-get.workspace = true
+team-member-list.workspace = true
+upload-list-for-user.workspace = true
+user-get.workspace = true
+user-identity-delete.workspace = true
+user-profile-validate.workspace = true
+user-team-list.workspace = true
+tivet-config.workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true
+
+faker-user.workspace = true
+upload-get.workspace = true
+upload-prepare.workspace = true

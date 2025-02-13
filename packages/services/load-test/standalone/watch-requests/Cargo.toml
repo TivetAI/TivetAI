@@ -1,0 +1,27 @@
+[package]
+name = "load-test-watch-requests"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+chirp-client.workspace = true
+tivet-operation.workspace = true
+tivet-connection.workspace = true
+tivet-runtime.workspace = true
+tokio = { version = "1.40", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "json", "ansi"] }
+tracing-logfmt = "0.3"
+tivet-api.workspace = true
+reqwest = "0.11"
+
+faker-game.workspace = true
+faker-team.workspace = true
+user-identity-create.workspace = true
+token-create.workspace = true
+tivet-config.workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true

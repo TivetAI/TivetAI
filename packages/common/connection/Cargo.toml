@@ -1,0 +1,15 @@
+[package]
+name = "tivet-connection"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+chirp-client.workspace = true
+chirp-perf.workspace = true
+global-error.workspace = true
+tivet-cache.workspace = true
+tivet-pools.workspace = true
+tivet-util.workspace = true
+tracing = "0.1"

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.captcha.hcaptcha_config_get;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/captcha.proto";
+
+message Request {
+    tivet.backend.captcha.CaptchaConfig.Hcaptcha config = 1;
+}
+
+message Response {
+    string site_key = 1;
+}

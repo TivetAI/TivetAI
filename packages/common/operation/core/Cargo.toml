@@ -1,0 +1,29 @@
+[package]
+name = "tivet-operation"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+async-trait = "0.1"
+chirp-client.workspace = true
+chirp-metrics.workspace = true
+chirp-perf.workspace = true
+formatted-error.workspace = true
+futures-util = "0.3"
+global-error.workspace = true
+indoc = "1.0"
+prost = "0.10"
+prost-types = "0.10"
+tivet-cache.workspace = true
+tivet-config.workspace = true
+tivet-connection.workspace = true
+tivet-operation-macros.workspace = true
+tivet-pools.workspace = true
+tivet-util.workspace = true
+serde_json = { version = "1.0", features = ["raw_value"] }
+thiserror = "1.0"
+tokio = { version = "1.40", features = ["full", "tracing"] }
+tracing = "0.1"
+types-proto.workspace = true

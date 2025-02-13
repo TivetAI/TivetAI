@@ -1,0 +1,25 @@
+[package]
+name = "faker-mm-lobby"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+chirp-client.workspace = true
+tivet-operation.workspace = true
+prost = "0.10"
+util-mm.workspace = true
+
+faker-build.workspace = true
+faker-game.workspace = true
+faker-game-version.workspace = true
+faker-region.workspace = true
+game-namespace-version-set.workspace = true
+game-resolve-namespace-id.workspace = true
+mm-config-version-get.workspace = true
+tivet-test.workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true
+tivet-test.workspace = true

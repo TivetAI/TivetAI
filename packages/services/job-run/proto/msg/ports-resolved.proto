@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.job_run.msg.ports_resolved;
+
+import "resources/legacy/proto/common.proto";
+
+/// name = "msg-job-run-ports-resolved"
+/// parameters = [
+/// 	{ name = "run_id" },
+/// ]
+message Message {
+	tivet.common.Uuid run_id = 1;
+}
+

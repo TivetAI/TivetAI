@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.team.search;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/team.proto";
+
+message Request {
+	string query = 1;
+	uint32 limit = 2;
+	optional int64 anchor = 3;
+}
+
+message Response {
+	repeated tivet.common.Uuid team_ids = 1;
+	optional int64 anchor = 2;
+}

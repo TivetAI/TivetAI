@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.team.msg.owner_transfer;
+
+import "resources/legacy/proto/common.proto";
+
+/// name = "msg-team-owner-transfer"
+/// parameters = [
+/// 	{ name = "team_id" },
+/// ]
+message Message {
+	tivet.common.Uuid team_id = 1;
+	tivet.common.Uuid new_owner_user_id = 2;
+}

@@ -1,0 +1,16 @@
+[package]
+name = "faker-user"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+chirp-client.workspace = true
+prost = "0.10"
+tivet-operation.workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true
+
+user-get.workspace = true

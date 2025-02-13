@@ -1,0 +1,17 @@
+[package]
+name = "tivet-metrics"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+global-error.workspace = true
+hyper = { version = "0.14", features = ["server", "http1", "tcp"] }
+lazy_static = "1.4"
+prometheus = "0.13"
+tivet-config.workspace = true
+tivet-env.workspace = true
+tokio = "1.40.0"
+tracing = "0.1"
+

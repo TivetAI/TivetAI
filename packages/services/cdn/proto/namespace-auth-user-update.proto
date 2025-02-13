@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.cdn.namespace_auth_user_update;
+
+import "resources/legacy/proto/common.proto";
+
+message Request {
+	tivet.common.Uuid namespace_id = 1;
+	string user = 2;
+	string password = 3;
+}
+
+message Response {
+
+}

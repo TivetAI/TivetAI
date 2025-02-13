@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.upload.list_for_user;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/upload.proto";
+
+message Request {
+	repeated tivet.common.Uuid user_ids = 1;
+	optional int64 anchor = 2;
+	uint32 limit = 3;
+}
+
+message Response {
+	message User {
+		tivet.common.Uuid user_id = 1;
+		repeated tivet.common.Uuid upload_ids = 2;
+		optional int64 anchor = 3;
+	}
+
+	repeated User users = 1;
+}

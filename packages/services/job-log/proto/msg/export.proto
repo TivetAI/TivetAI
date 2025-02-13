@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.job_log.msg.export;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/job/log.proto";
+
+/// name = "msg-job-log-export"
+/// parameters = [
+/// 	{ name = "request_id" },
+/// ]
+message Message {
+	tivet.common.Uuid request_id = 1;
+	tivet.common.Uuid run_id = 2;
+	string task = 3;
+	tivet.backend.job.log.StreamType stream_type = 4;
+}
+

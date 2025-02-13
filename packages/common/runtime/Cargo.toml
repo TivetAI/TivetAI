@@ -1,0 +1,17 @@
+[package]
+name = "tivet-runtime"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+console-subscriber = "0.1"
+lazy_static = "1.4"
+tivet-metrics.workspace = true
+thiserror = "1.0"
+tokio = { version = "1.40", features = ["full", "tracing"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "json", "ansi"] }  # Used with attribute
+tracing-logfmt = { version = "0.3", features = ["ansi_logs"] }
+

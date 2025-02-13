@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.user.token_create;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/net.proto";
+
+message Request {
+	tivet.common.Uuid user_id = 1;
+	tivet.backend.net.ClientInfo client = 2;
+}
+
+message Response {
+	string token = 1;
+	string refresh_token = 2;
+}

@@ -1,0 +1,26 @@
+[package]
+name = "cluster-default-update"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+chirp-client.workspace = true
+chirp-workflow.workspace = true
+reqwest = "0.11"
+tivet-connection.workspace = true
+tivet-pools.workspace = true
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.40", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "json", "ansi"] }
+tracing-logfmt = "0.3"
+uuid = { version = "1", features = ["v4"] }
+
+cluster.workspace = true
+tivet-config.workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true

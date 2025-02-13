@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.game.msg.create_complete;
+
+import "resources/legacy/proto/common.proto";
+
+/// name = "msg-game-create-complete"
+/// tail-ttl = 300
+/// parameters = [
+/// 	{ name = "game_id" },
+/// ]
+message Message {
+	tivet.common.Uuid game_id = 1;
+}
+

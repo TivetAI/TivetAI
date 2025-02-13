@@ -1,0 +1,10 @@
+[package]
+name = "tivet-util-build"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+tivet-operation.workspace = true
+

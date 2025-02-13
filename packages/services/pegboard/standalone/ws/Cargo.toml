@@ -1,0 +1,21 @@
+[package]
+name = "pegboard-ws"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+chirp-client.workspace = true
+chirp-workflow.workspace = true
+hyper = "1.4"
+tivet-connection.workspace = true
+tivet-health-checks.workspace = true
+tivet-metrics.workspace = true
+tivet-runtime.workspace = true
+serde = { version = "1.0", features = ["derive"] }
+tokio-tungstenite = "0.23.1"
+url = "2.2.2"
+
+pegboard.workspace = true
+tivet-config.workspace = true

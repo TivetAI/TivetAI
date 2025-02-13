@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.faker.team;
+
+import "resources/legacy/proto/common.proto";
+
+message Request {
+	tivet.common.Uuid team_id = 2;
+}
+
+message Response {
+	tivet.common.Uuid team_id = 1;
+	repeated tivet.common.Uuid member_user_ids = 2;
+}

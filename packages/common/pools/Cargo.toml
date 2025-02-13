@@ -1,0 +1,50 @@
+[package]
+name = "tivet-pools"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+async-nats = "0.33"
+clickhouse = { version = "0.11.2" }
+funty = "=1.1.0"  # Fixes issue with sqlx dependency, see https://github.com/bitvecto-rs/bitvec/issues/105#issuecomment-778570981
+global-error.workspace = true
+hyper = { version = "0.14" }
+hyper-tls = { version = "0.5.0" }
+lazy_static = "1.4"
+rand = "0.8"
+tivet-metrics.workspace = true
+thiserror = "1.0"
+tokio = { version = "1.40", features = ["tracing"] }
+tokio-util = "0.7"
+tracing = "0.1"
+governor = "0.6"
+url = "2.4"
+tivet-config.workspace = true
+
+[dependencies.sqlx]
+workspace = true
+features = [
+	"runtime-tokio",
+	"runtime-tokio-native-tls",
+	"postgres",
+	"macros",
+	"uuid",
+	"ipnetwork",
+	"json",
+	"bit-vec",
+]
+
+[dependencies.redis]
+# TODO: https://github.com/tivet-gg/tivet/issues/508
+workspace = true
+features = [
+	"keep-alive",
+	"aio",
+	"tokio-comp",
+	"tokio-native-tls-comp",
+	"connection-manager",
+	"script",
+	"streams",
+]

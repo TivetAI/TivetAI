@@ -1,0 +1,24 @@
+[package]
+name = "job-log-worker"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+chirp-worker.workspace = true
+chirp-client.workspace = true
+clickhouse = { version = "0.11.2", features = ["wa-37420", "uuid"] }
+tivet-health-checks.workspace = true
+tivet-metrics.workspace = true
+tivet-runtime.workspace = true
+reqwest = "0.11"
+serde = { version = "1.0", features = ["derive"] }
+
+upload-complete.workspace = true
+upload-prepare.workspace = true
+tivet-config.workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true
+s3-util.workspace = true

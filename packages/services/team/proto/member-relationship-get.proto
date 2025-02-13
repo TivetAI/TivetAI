@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.team.member_relationship_get;
+
+import "resources/legacy/proto/common.proto";
+
+message Request {
+    message User {
+        tivet.common.Uuid this_user_id = 1;
+        tivet.common.Uuid other_user_id = 2;
+    }
+
+    repeated User users = 1;
+}
+
+message Response {
+    message User {
+        tivet.common.Uuid this_user_id = 2;
+        tivet.common.Uuid other_user_id = 3;
+        repeated tivet.common.Uuid shared_team_ids = 1;
+    }
+
+    repeated User users = 1;
+}

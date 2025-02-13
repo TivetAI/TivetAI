@@ -1,0 +1,41 @@
+[package]
+name = "mm-gc"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+lazy_static = "1.4"
+chirp-client.workspace = true
+tivet-operation.workspace = true
+futures-util = "0.3"
+indoc = "1.0"
+prost = "0.10"
+tivet-connection.workspace = true
+tivet-health-checks.workspace = true
+tivet-metrics.workspace = true
+tivet-pools.workspace = true
+tivet-runtime.workspace = true
+tokio = { version = "1.40", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+    "fmt",
+    "json",
+    "ansi",
+] }
+tracing-logfmt = "0.3"
+util-mm.workspace = true
+
+region-list.workspace = true
+tivet-config.workspace = true
+
+[dependencies.sqlx]
+workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true
+chrono = "0.4"
+
+faker-mm-lobby.workspace = true
+mm-lobby-get.workspace = true

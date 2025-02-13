@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.team.msg.create_complete;
+
+import "resources/legacy/proto/common.proto";
+
+/// name = "msg-team-create-complete"
+/// parameters = [
+/// 	{ name = "team_id" },
+/// ]
+message Message {
+	tivet.common.Uuid team_id = 1;
+}
+

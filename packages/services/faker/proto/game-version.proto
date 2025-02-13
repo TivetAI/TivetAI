@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.faker.game_version;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/cloud.proto";
+import "resources/legacy/proto/backend/cdn.proto";
+import "resources/legacy/proto/backend/matchmaker.proto";
+import "resources/legacy/proto/backend/kv.proto";
+import "resources/legacy/proto/backend/identity.proto";
+import "resources/legacy/proto/backend/captcha.proto";
+
+message Request {
+	reserved 106, 107;
+
+	message OverrideCdnConfig {
+		optional tivet.backend.cdn.VersionConfig config = 1;
+	}
+
+	message OverrideMatchmakerConfig {
+		optional tivet.backend.matchmaker.VersionConfig config = 1;
+	}
+
+	message OverrideKvConfig {
+		optional tivet.backend.kv.VersionConfig config = 1;
+	}
+
+	message OverrideIdentityConfig {
+		optional tivet.backend.identity.VersionConfig config = 1;
+	}
+
+
+	message OverrideLobbyGroups {
+		repeated tivet.backend.matchmaker.LobbyGroup lobby_groups = 1;
+	}
+
+	message OverrideCaptcha {
+		optional tivet.backend.captcha.CaptchaConfig captcha_config = 1;
+	}
+
+
+	tivet.common.Uuid game_id = 1;
+	optional tivet.common.Uuid deploy_to_namespace_id = 2;
+
+	optional tivet.backend.cloud.VersionConfig override_config = 101;
+	optional OverrideCdnConfig override_cdn_config = 104;
+	optional OverrideMatchmakerConfig override_mm_config = 102;
+
+	optional OverrideLobbyGroups override_lobby_groups = 103;
+	optional OverrideCaptcha override_captcha = 105;
+}
+
+message Response {
+	tivet.common.Uuid version_id = 1;
+	tivet.backend.matchmaker.VersionConfig mm_config = 2;
+	tivet.backend.matchmaker.VersionConfigMeta mm_config_meta = 3;
+}

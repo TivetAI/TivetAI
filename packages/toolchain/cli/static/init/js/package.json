@@ -1,0 +1,12 @@
+{
+	"name": "__NAME__",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"dependencies": {
+		"@tivet-gg/actor": "latest"
+	},
+	"devDependencies": {
+		"@tivet-gg/actor-client": "latest"
+	}
+}

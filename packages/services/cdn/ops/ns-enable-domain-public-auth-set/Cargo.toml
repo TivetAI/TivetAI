@@ -1,0 +1,19 @@
+[package]
+name = "cdn-ns-enable-domain-public-auth-set"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+tivet-operation.workspace = true
+chirp-client.workspace = true
+prost = "0.10"
+
+[dependencies.sqlx]
+workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true
+
+cdn-namespace-create.workspace = true

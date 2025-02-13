@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.mm.msg.lobby_cleanup_complete;
+
+import "resources/legacy/proto/common.proto";
+
+/// name = "msg-mm-lobby-cleanup-complete"
+/// parameters = [
+/// 	{ name = "lobby_id" },
+/// ]
+message Message {
+	tivet.common.Uuid lobby_id = 1;
+}
+

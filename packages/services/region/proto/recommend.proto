@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.region.recommend;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/net.proto";
+
+message Request {
+	reserved 3, 4;
+	optional string origin_ip = 1 [deprecated = true];
+	optional tivet.backend.net.Coordinates coords = 5;
+	repeated tivet.common.Uuid region_ids = 2;
+}
+
+message Response {
+	message Region {
+		reserved 2, 3;
+		tivet.common.Uuid region_id = 1;
+		tivet.backend.net.Coordinates coords = 5;
+		double distance_meters = 4;
+	}
+
+	repeated Region regions = 1;
+}

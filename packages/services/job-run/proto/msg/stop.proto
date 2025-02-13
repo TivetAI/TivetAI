@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.job_run.msg.stop;
+
+import "resources/legacy/proto/common.proto";
+
+/// name = "msg-job-run-stop"
+/// deduplicate = true
+/// parameters = [
+/// 	{ name = "run_id" },
+/// ]
+message Message {
+	reserved 2;
+
+	tivet.common.Uuid run_id = 1;
+	bool skip_kill_alloc = 3;
+}
+

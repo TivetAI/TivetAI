@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.mm.msg.player_remove;
+
+import "resources/legacy/proto/common.proto";
+
+/// name = "msg-mm-player-remove"
+/// deduplicate = true
+/// parameters = [
+/// 	{ name = "player_id" },
+/// ]
+message Message {
+	tivet.common.Uuid player_id = 1;
+	optional tivet.common.Uuid lobby_id = 3;
+
+	// If this player destroy is coming from a lobby destroy.
+	bool from_lobby_destroy = 2;
+}
+

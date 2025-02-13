@@ -1,0 +1,25 @@
+[package]
+name = "cdn-worker"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+chirp-worker.workspace = true
+chirp-client.workspace = true
+tivet-health-checks.workspace = true
+tivet-metrics.workspace = true
+tivet-runtime.workspace = true
+util-cdn.workspace = true
+
+cdn-namespace-get.workspace = true
+cdn-site-get.workspace = true
+cdn-version-get.workspace = true
+game-get.workspace = true
+game-namespace-get.workspace = true
+upload-get.workspace = true
+tivet-config.workspace = true
+
+[dev-dependencies]
+chirp-worker.workspace = true

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.team.msg.user_ban;
+
+import "resources/legacy/proto/common.proto";
+
+/// name = "msg-team-user-ban"
+/// parameters = [
+/// 	{ name = "team_id" },
+/// 	{ name = "user_id" },
+/// ]
+message Message {
+	tivet.common.Uuid team_id = 1;
+	tivet.common.Uuid user_id = 2;
+	tivet.common.Uuid banner_user_id = 3;
+}
+

@@ -1,0 +1,45 @@
+[package]
+name = "tivet-convert"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+chirp-client.workspace = true
+tivet-operation.workspace = true
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = "0.4"
+types-proto.workspace = true
+util-mm.workspace = true
+
+cdn-namespace-get.workspace = true
+cluster.workspace = true
+game-get.workspace = true
+game-namespace-get.workspace = true
+game-namespace-list.workspace = true
+game-resolve-namespace-id.workspace = true
+game-token-development-validate.workspace = true
+game-validate.workspace = true
+game-version-validate.workspace = true
+job-run.workspace = true
+mm-lobby-player-count.workspace = true
+mm-lobby-runtime-aggregate.workspace = true
+mm-player-count-for-namespace.workspace = true
+region-get.workspace = true
+region-list-for-game.workspace = true
+region-resolve.workspace = true
+team-get.workspace = true
+team-member-count.workspace = true
+team-profile-validate.workspace = true
+team-validate.workspace = true
+tier.workspace = true
+user-get.workspace = true
+user-identity-get.workspace = true
+user-team-list.workspace = true
+
+tivet-api.workspace = true
+tivet-group-server.workspace = true
+tivet-portal-server.workspace = true
+tivet-config.workspace = true

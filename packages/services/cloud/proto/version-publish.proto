@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package tivet.backend.pkg.cloud.version_publish;
+
+import "resources/legacy/proto/common.proto";
+import "resources/legacy/proto/backend/cloud.proto";
+
+message Request {
+	tivet.common.Uuid game_id = 1;
+	string display_name = 2;
+	tivet.backend.cloud.VersionConfig config = 3;
+	optional tivet.common.Uuid creator_user_id = 4;
+}
+
+message Response {
+	tivet.common.Uuid version_id = 1;
+}
