@@ -1,0 +1,21 @@
+exclude = [
+    # Tivet domains that shouldn't be checked against in example code
+    '^https://.*\.api\.tivet\.gg/',
+    '^https://hub\.tivet\.gg/.*',
+    '^https://.*\.tivet\.game/',
+    '^https://ph\.tivet\.gg/',
+
+    # Strict rate limits
+    '^https://www\.cloudflare\.com/learning/',
+    '^https://github\.com/',
+    '^https://twitter\.com',
+    '^https://discord\.gg/',
+
+    # Example code
+    '@body\.json',
+
+    # Bug parsing `src={xxxx}`
+    '%7B.*%7D$'
+]
+# exclude_all_private = true
+exclude_mail = true
