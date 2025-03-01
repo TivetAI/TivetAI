@@ -2,13 +2,15 @@
 
 # 🌐 Tivet
 
-[![X](https://img.shields.io/badge/X-Platform-black?style=for-the-badge&logo=x&logoColor=white)](https://x.com/TrucloAI)
+![Tivet Banner](banner.png)
+
+[![X](https://img.shields.io/badge/X-Platform-black?style=for-the-badge&logo=x&logoColor=white)](https://x.com/TivetAI)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=for-the-badge&logo=python)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-Latest-red?style=for-the-badge&logo=pytorch)](https://pytorch.org/)
 
 <h3 align="center">Open-source & self-hostable.</h3>
 <h4 align="center">
-  Tivet is the platform to build realtime ai agent applications.<br/>
+  Tivet is the platform to build realtime AI agent applications.<br/>
   No limitations of Redis or timeouts of Lambda. 
 </h4>
 
@@ -29,7 +31,7 @@
 
 ### Supported Platform
 
-- [**Tivet**](https://actorcore.org/platforms/tivet) - Managed Tivet platform
+- [**Tivet**](https://tivet.gitbook.io/tivet-docs/getting-started/actor-sdk) - Managed Tivet platform
 
 ### Use Cases
 
@@ -79,7 +81,7 @@ export default class ChatRoom extends Actor<State> {
         return { messages: [] };
     }
 
-    // receive an remote procedure call from the client
+    // receive a remote procedure call from the client
     sendMessage(rpc: Rpc<ChatRoom>, username: string, message: string) {
         // save message to persistent storage
         this._state.messages.push({ username, message });
@@ -114,9 +116,131 @@ await chatRoom.sendMessage("william", "All the world's a stage.");
 
 Deploy to the platform:
 
-- [Tivet](https://actorcore.org/platforms/tivet)
+- [Tivet](https://tivet.gitbook.io/tivet-docs/build-with-actors/create-and-manage-actors)
+
+
+## Actor Tags
+Actor tags are simple key-value pairs attached to every actor. They serve two main purposes:
+
+- **Actor Discovery**: Find specific actors using `client.get(tags, opts)`.
+- **Organization**: Group actors for monitoring & administration purposes.
+
+#### Best Practices
+When choosing tags, follow these best practices:
+
+- Keep values short and concise.
+- Use consistent naming patterns.
+- Avoid storing sensitive information.
+- The `name` tag is required and specifies which type of actor to spawn.
+
+#### Common Tag Patterns
+##### Connect to a Game Server Using a Party Code
+```typescript
+const gameServer = await client.get<GameServer>({
+  name: 'game_server',
+  partyCode: 'ABCDEF'
+});
+```
+
+#### Client Setup
+Clients are used to connect & manage actors.
+
+To create a new client, use:
+```typescript
+import { Client } from '@tivet-gg/actor-client';
+const client = new Client(/* CONNECTION ADDRESS */);
+```
+
+#### Finding or Creating Actors
+##### Get or Create an Actor
+Attempts to find an existing actor matching the provided tags. If no matching actor is found, it creates a new one with those tags.
+```typescript
+const room = await client.get<ChatRoom>({
+  name: 'chat_room',
+  channel: 'random'
+});
+await room.sendMessage('Hello, world!');
+```
+
+##### Explicitly Create a New Actor
+```typescript
+const doc = await client.create<MyDocument>({
+  create: {
+    tags: {
+      name: 'my_document',
+      docId: '123'
+    }
+  }
+});
+await doc.doSomething();
+```
+
+##### Connect to an Actor Using ID
+It is recommended to use tags instead of actor IDs directly.
+```typescript
+const myActorId = '55425f42-82f8-451f-82c1-6227c83c9372';
+const doc = await client.getWithId<MyDocument>(myActorId);
+await doc.doSomething();
+```
+
+#### Options
+##### Parameters (`opts.parameters`)
+All client methods accept a `parameters` property for additional connection details, such as authentication tokens or usernames.
+```typescript
+const actor = await client.get<Example>(
+  { name: 'example' },
+  {
+    parameters: { authToken: 'supersekure' }
+  }
+);
+```
+
+##### Additional Tags on Creation (`opts.create.tags`)
+```typescript
+const actor = client.get<MyDocument>(
+  { name: 'my_document', document_id: 'budget_2024' },
+  {
+    create: {
+      tags: {
+        name: 'my_document',
+        workspace_id: 'team_alpha',
+        document_id: 'budget_2024'
+      }
+    }
+  }
+);
+```
+
+##### Specify Region (`opts.create.region`)
+By default, actors are created in the lowest latency region. To override this:
+```typescript
+const actor = client.get(
+  { name: 'example' },
+  {
+    create: {
+      region: 'atl'
+    }
+  }
+);
+```
+
+##### Prevent Actor Creation (`opts.noCreate`)
+To prevent creating a new actor if it does not exist:
+```typescript
+const doc = await client.get<MyDocument>({ name: 'my_document', docId: '123' }, { noCreate: true });
+await doc.doSomething();
+```
+
+#### Shutting Down an Actor
+For security reasons, actors must be shut down from within the actor itself using `this._shutdown()`.
+```typescript
+export default class Example extends Actor {
+  myShutdownRpc(rpc: Rpc<Example>) {
+    this._shutdown();
+  }
+}
+```
 
 ## Community & Support
 
--   Follow us on [**X**](https://x.com/tivet_gg)
-
+-   Follow us on [**X**](https://x.com/TivetAI)
