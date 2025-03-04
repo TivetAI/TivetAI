@@ -147,7 +147,7 @@ Clients are used to connect & manage actors.
 
 To create a new client, use:
 ```typescript
-import { Client } from '@tivet-gg/actor-client';
+import { Client } from '@tivet/actor-client';
 const client = new Client(/* CONNECTION ADDRESS */);
 ```
 
