@@ -1,44 +1,75 @@
-<?xml version="1.0"?>
+<?xml version="1.1"?>
 <clickhouse>
+    <!-- Users and roles -->
     <users>
         <default>
-            <!-- Enable access management -->
             <access_management>1</access_management>
-            
-            <!-- No password -->
             <password>default</password>
-            
-            <!-- Grant full access -->
             <profile>default</profile>
             <networks>
                 <ip>::/0</ip>
             </networks>
-            
-            <!-- Grant all quotas -->
             <quota>default</quota>
-            
-            <!-- Grant all permissions -->
             <allow_ddl>1</allow_ddl>
             <allow_introspection>1</allow_introspection>
             <allow_dictionaries>1</allow_dictionaries>
-            
-            <!-- Grant access to all databases -->
             <databases>
                 <database_name>.*</database_name>
             </databases>
         </default>
+
+        <analytics>
+            <password>strongpass</password>
+            <profile>analytics</profile>
+            <networks>
+                <ip>192.168.0.0/16</ip>
+                <ip>10.0.0.0/8</ip>
+            </networks>
+            <quota>analytics_quota</quota>
+            <databases>
+                <database_name>analytics_db</database_name>
+            </databases>
+        </analytics>
+
+        <readonly_user>
+            <password>readonly123</password>
+            <profile>readonly</profile>
+            <networks>
+                <ip>172.16.0.0/12</ip>
+            </networks>
+            <quota>readonly_quota</quota>
+            <readonly>1</readonly>
+        </readonly_user>
     </users>
-    
-    <!-- Default profile settings -->
+
+    <!-- Profiles define resource and feature limits -->
     <profiles>
         <default>
             <max_memory_usage>10000000000</max_memory_usage>
             <max_execution_time>300</max_execution_time>
             <max_rows_to_read>1000000000</max_rows_to_read>
+            <max_threads>8</max_threads>
+            <log_queries>1</log_queries>
         </default>
+
+        <analytics>
+            <max_memory_usage>20000000000</max_memory_usage>
+            <max_bytes_before_external_group_by>5000000000</max_bytes_before_external_group_by>
+            <max_network_bandwidth>100000000</max_network_bandwidth>
+            <load_balancing>random</load_balancing>
+            <use_uncompressed_cache>1</use_uncompressed_cache>
+            <join_algorithm>hash</join_algorithm>
+        </analytics>
+
+        <readonly>
+            <readonly>1</readonly>
+            <log_queries>0</log_queries>
+            <max_memory_usage>2000000000</max_memory_usage>
+            <max_execution_time>60</max_execution_time>
+        </readonly>
     </profiles>
-    
-    <!-- Default quota settings -->
+
+    <!-- Quotas to control usage per role -->
     <quotas>
         <default>
             <interval>
@@ -50,5 +81,61 @@
                 <execution_time>0</execution_time>
             </interval>
         </default>
+
+        <analytics_quota>
+            <interval>
+                <duration>3600</duration>
+                <queries>10000</queries>
+                <execution_time>10000</execution_time>
+                <read_rows>1000000000</read_rows>
+            </interval>
+        </analytics_quota>
+
+        <readonly_quota>
+            <interval>
+                <duration>3600</duration>
+                <queries>1000</queries>
+                <execution_time>3600</execution_time>
+                <read_rows>500000000</read_rows>
+            </interval>
+        </readonly_quota>
     </quotas>
+
+    <!-- Settings overrides per user if needed -->
+    <user_directories>
+        <users_xml>
+            <path>users.xml</path>
+        </users_xml>
+    </user_directories>
+
+    <!-- Global connection limits -->
+    <max_connections>1024</max_connections>
+    <keep_alive_timeout>10</keep_alive_timeout>
+    <max_concurrent_queries>256</max_concurrent_queries>
+
+    <!-- Security-related settings -->
+    <http_server_default_response>Access Denied</http_server_default_response>
+    <allow_plaintext_password>0</allow_plaintext_password>
+    <allow_http_credentials_in_logs>0</allow_http_credentials_in_logs>
+    <display_name>ClickHouse Access Node</display_name>
+
+    <!-- External dictionaries access -->
+    <dictionaries_config>/etc/clickhouse-server/dictionaries/*.xml</dictionaries_config>
+
+    <!-- Enable audit logging -->
+    <audit_log>
+        <database>system</database>
+        <table>audit_log</table>
+        <flush_interval_milliseconds>10000</flush_interval_milliseconds>
+    </audit_log>
+
+    <!-- Enable session control -->
+    <session_settings>
+        <idle_timeout>600</idle_timeout>
+        <client_idle_timeout>300</client_idle_timeout>
+        <session_close_on_exit>1</session_close_on_exit>
+    </session_settings>
+
+    <!-- Add optional telemetry -->
+    <send_crash_reports>1</send_crash_reports>
 </clickhouse>
