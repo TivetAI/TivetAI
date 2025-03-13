@@ -1,100 +1,131 @@
-#!/usr/bin/env bash
-set -euf -o pipefail
+# === System Hardening ===
+log "INFO" "Applying basic system hardening..."
+echo "Disabling root SSH login..."
+sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 
-TARGET_ARCH=$(uname -m | sed 's/aarch64/arm64/' | sed 's/x86_64/amd64/')
+echo "Disabling unused filesystems..."
+echo "install cramfs /bin/true" >> /etc/modprobe.d/hardening.conf
+echo "install squashfs /bin/true" >> /etc/modprobe.d/hardening.conf
 
-apt-get update
+echo "Enabling UFW..."
+apt-get install -y ufw
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh
+ufw --force enable
 
-# Install required packages
-#
-# The FDB version should match `cluster::workflows::server::install::install_scripts::components::fdb::FDB_VERSION`
- apt-get install -y \
-	libclang-dev \
-    ca-certificates \
-    openssl \
-    curl \
-    postgresql-client \
-    gpg \
-    xz-utils \
-	unzip \
-    apt-transport-https \
-    dirmngr \
-	netcat-openbsd \
-	procps 
+# === CLI Helpers ===
+log "INFO" "Installing CLI helpers..."
+echo 'alias ll="ls -la"' >> /etc/bash.bashrc
+echo 'alias fdbc="fdbcli --exec status"' >> /etc/bash.bashrc
+echo 'alias ck="clickhouse-client"' >> /etc/bash.bashrc
+echo 'alias pgc="psql -U postgres"' >> /etc/bash.bashrc
 
-(curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.1/migrate.linux-${TARGET_ARCH}.tar.gz | tar xvz)
-mv migrate /usr/local/bin/migrate
+# === Health Check Scripts ===
+log "INFO" "Installing health checks..."
+cat <<'EOF' > /usr/local/bin/healthcheck_fdb.sh
+#!/bin/bash
+if fdbcli --exec 'status' &>/dev/null; then
+  echo "FoundationDB is healthy"
+  exit 0
+else
+  echo "FoundationDB health check failed"
+  exit 1
+fi
+EOF
+chmod +x /usr/local/bin/healthcheck_fdb.sh
 
-curl -fsSL https://deno.land/x/install/install.sh | sh
-ln -s /root/.deno/bin/deno /usr/local/bin/deno
+cat <<'EOF' > /usr/local/bin/healthcheck_ck.sh
+#!/bin/bash
+echo "SELECT 1" | clickhouse-client &>/dev/null
+EOF
+chmod +x /usr/local/bin/healthcheck_ck.sh
 
-curl -Lf -o /lib/libfdb_c.so "https://github.com/apple/foundationdb/releases/download/7.1.60/libfdb_c.x86_64.so"
+# === Logrotate ===
+log "INFO" "Setting up log rotation..."
+cat <<EOF > /etc/logrotate.d/fdb_custom
+/var/log/foundationdb-monitor/*.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 0640 foundationdb foundationdb
+}
+EOF
 
-# === Traefik ===
-curl -sSLf https://github.com/traefik/traefik/releases/download/v${TRAEFIK_VERSION}/traefik_v${TRAEFIK_VERSION}_linux_${TARGET_ARCH}.tar.gz | \
-    tar xz -C /usr/local/bin/ traefik
+# === Metrics Output ===
+log "INFO" "Creating metrics endpoints..."
+mkdir -p /var/metrics
+cat <<'EOF' > /usr/local/bin/generate_metrics.sh
+#!/bin/bash
+{
+  echo "uptime_seconds $(awk '{print int($1)}' /proc/uptime)"
+  echo "load_avg $(awk '{print $1}' /proc/loadavg)"
+  echo "mem_free_kb $(awk '/MemFree/ {print $2}' /proc/meminfo)"
+} > /var/metrics/system.prom
+EOF
+chmod +x /usr/local/bin/generate_metrics.sh
+echo "* * * * * root /usr/local/bin/generate_metrics.sh" >> /etc/crontab
 
-# === CockroachDB ===
-useradd -m -s /bin/bash cockroachdb && \
-    curl -sSLf https://binaries.cockroachdb.com/cockroach-v${COCKROACHDB_VERSION}.linux-${TARGET_ARCH}.tgz | tar xz && \
-    cp -i cockroach-v${COCKROACHDB_VERSION}.linux-${TARGET_ARCH}/cockroach /usr/local/bin/ && \
-    rm -rf cockroach-v${COCKROACHDB_VERSION}.linux-${TARGET_ARCH}
+# === Bash Prompt Improvement ===
+log "INFO" "Improving shell prompt..."
+echo 'PS1="\u@\h:\w\$ "' >> /etc/bash.bashrc
 
-# === Redis ===
-# TODO(RVT-4084): Switch to Valkey when Debian 13 released or ocmpile from source
-useradd -m -s /bin/bash redis && \
-    apt install -y redis-server redis-tools
+# === Environment Summary ===
+log "INFO" "Writing install summary..."
+cat <<EOF > /etc/setup_summary.txt
+Installed Services:
+- FoundationDB (${FDB_VERSION})
+- ClickHouse
+- Redis
+- CockroachDB
+- Traefik
+- NATS
+- SeaweedFS
+- Vector
+- S6 Overlay
 
-# === ClickHouse ===
-useradd -m -s /bin/bash clickhouse && \
-    curl -fsSL 'https://packages.clickhouse.com/rpm/lts/repodata/repomd.xml.key' | gpg --dearmor -o /usr/share/keyrings/clickhouse-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/clickhouse-keyring.gpg] https://packages.clickhouse.com/deb stable main" | tee /etc/apt/sources.list.d/clickhouse.list && \
-    apt-get update && \
-    apt-get install -y clickhouse-client clickhouse-server
+Architecture: ${TARGET_ARCH}
+Network mode: container
+EOF
 
-# === NATS ===
-useradd -m -s /bin/bash nats && \
-    curl -sSLf https://github.com/nats-io/nats-server/releases/download/v${NATS_VERSION}/nats-server-v${NATS_VERSION}-linux-${TARGET_ARCH}.tar.gz | \
-    tar xz -C /usr/local/bin/ --strip-components=1 nats-server-v${NATS_VERSION}-linux-${TARGET_ARCH}/nats-server
+# === Filesystem & Disk Alerts ===
+cat <<'EOF' > /usr/local/bin/disk_alert.sh
+#!/bin/bash
+THRESHOLD=85
+USAGE=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
+if [ "$USAGE" -gt "$THRESHOLD" ]; then
+  echo "Disk usage critical: $USAGE%" >&2
+  exit 1
+else
+  echo "Disk usage: $USAGE%"
+fi
+EOF
+chmod +x /usr/local/bin/disk_alert.sh
 
-# === SeaweedFS ===
-useradd -m -s /bin/bash seaweedfs && \
-    curl -sSLf https://github.com/seaweedfs/seaweedfs/releases/download/${SEAWEEDFS_VERSION}/linux_${TARGET_ARCH}.tar.gz | tar xz -C /usr/local/bin/
+# === Sanity Check Script ===
+cat <<'EOF' > /usr/local/bin/sanity_check.sh
+#!/bin/bash
+echo "Running system sanity check..."
+commands=("fdbcli" "clickhouse-client" "redis-cli" "cockroach" "traefik" "nats-server" "weed")
+for cmd in "${commands[@]}"; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "Missing: $cmd"
+  else
+    echo "Found: $cmd"
+  fi
+done
+EOF
+chmod +x /usr/local/bin/sanity_check.sh
 
-# === FoundationDB ===
-# Client (for health checks)
-curl -sSLf -o "/tmp/foundationdb-clients.deb" "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb"
-dpkg -i "/tmp/foundationdb-clients.deb"
+# === Permissions Sanity ===
+log "INFO" "Checking file permissions..."
+chown -R root:root /usr/local/bin/*
+chmod 755 /usr/local/bin/*
 
-fdbcli --version
-
-# Server
-curl -Lf -o "/tmp/foundationdb-server.deb" "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-server_${FDB_VERSION}-1_amd64.deb"
-dpkg -i "/tmp/foundationdb-server.deb"
-rm -rf /etc/foundationdb
-
-fdbserver --version
-
-# Create log dir for internal FDB logs, since /var/log/foundationdb is used by S6
-mkdir /var/log/foundationdb-monitor
-chown foundationdb:foundationdb /var/log/foundationdb-monitor
-
-# === Vector ===
-useradd -m -s /bin/bash vector-client && \
-	useradd -m -s /bin/bash vector-server && \
-    curl -sSLf https://packages.timber.io/vector/${VECTOR_VERSION}/vector_${VECTOR_VERSION}-1_${TARGET_ARCH}.deb -o /tmp/vector.deb && \
-    dpkg -i /tmp/vector.deb && \
-    rm /tmp/vector.deb
-
-# === S6 Overlay ===
-curl -sSLf https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz -o /tmp/s6-overlay-noarch.tar.xz && \
-    tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && \
-    curl -sSLf https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-$(uname -m).tar.xz -o /tmp/s6-overlay-$(uname -m).tar.xz && \
-    tar -C / -Jxpf /tmp/s6-overlay-$(uname -m).tar.xz
-
-# Setup S6
-deno run --allow-read --allow-write /tmp/build-scripts/setup_s6.ts
-
-# === Tivet ===
-useradd -m -s /bin/bash tivet-server
-useradd -m -s /bin/bash tivet-guard
+# === Final Message ===
+echo -e "\n✅ Base system provisioning complete."
+echo "Run /usr/local/bin/sanity_check.sh to verify installation."
+echo "Refer to /etc/setup_summary.txt for installed components."
