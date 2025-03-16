@@ -166,3 +166,90 @@ pub async fn get_logs_deprecated(
 		watch: logs_res.watch,
 	})
 }
+
+use metrics::{increment_counter, histogram!};
+
+let start_ts = std::time::Instant::now();
+
+// Log metrics (count and latency)
+increment_counter!(
+	"logs_requested_total",
+	"stream" => format!("{:?}", query.stream),
+	"game_id" => game_id.to_string()
+);
+
+histogram!(
+	"logs_request_duration_seconds",
+	start_ts.elapsed().as_secs_f64(),
+	"stream" => format!("{:?}", query.stream),
+	"game_id" => game_id.to_string()
+);
+
+tracing::info!(
+	?game_id,
+	?env_id,
+	?server_id,
+	stream = ?query.stream,
+	"Fetching logs"
+);
+
+if watch_index.as_i64()?.is_some() {
+	tracing::debug!("Using anchored log watch mode");
+} else {
+	tracing::debug!("Fetching latest logs (non-watch)");
+}
+
+use regex::Regex;
+
+#[derive(Debug, Deserialize)]
+pub struct GetActorLogsQuery {
+	#[serde(flatten)]
+	pub global: GlobalQuery,
+	pub stream: models::CloudGamesLogStream,
+	pub filter: Option<String>, // Optional regex filter
+}
+
+if let Some(ref pattern) = query.filter {
+	let re = Regex::new(pattern).map_err(|_| err_code!(BAD_REQUEST, "invalid_regex"))?;
+	let mut filtered = Vec::new();
+	let mut filtered_timestamps = Vec::new();
+	for (line, ts) in lines.into_iter().zip(timestamps.into_iter()) {
+		if let Ok(decoded) = base64::decode(&line) {
+			if let Ok(text) = std::str::from_utf8(&decoded) {
+				if re.is_match(text) {
+					filtered.push(line);
+					filtered_timestamps.push(ts);
+				}
+			}
+		}
+	}
+	lines = filtered;
+	timestamps = filtered_timestamps;
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GetActorLogsQuery {
+	#[serde(flatten)]
+	pub global: GlobalQuery,
+	pub stream: models::CloudGamesLogStream,
+	pub filter: Option<String>,
+	pub offset: Option<u32>,
+	pub limit: Option<u32>,
+}
+
+let offset = query.offset.unwrap_or(0) as usize;
+let limit = query.limit.unwrap_or(256) as usize;
+let end = usize::min(lines.len(), offset + limit);
+
+lines = lines.get(offset..end).unwrap_or(&[]).to_vec();
+timestamps = timestamps.get(offset..end).unwrap_or(&[]).to_vec();
+
+
+op!([ctx] audit_log {
+	action: "logs.fetch",
+	entity: Some("server".into()),
+	entity_id: Some(server_id.to_string()),
+	details: format!("Stream: {:?}, Filter: {:?}", query.stream, query.filter),
+})
+.await
+.ok(); // log but don't block if fails
