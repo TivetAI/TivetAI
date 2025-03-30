@@ -10,14 +10,20 @@ use tivet_operation::prelude::*;
 
 use crate::{auth::Auth, utils::refresh_token_header};
 
-// MARK: POST /identity/email/start-verification
+/// MARK: POST /identity/email/start-verification
+///
+/// Initiates email verification by checking captcha if necessary,
+/// then sends a verification code to the email address.
 pub async fn start(
 	ctx: Ctx<Auth>,
 	body: models::AuthIdentityStartEmailVerificationRequest,
 ) -> GlobalResult<models::AuthIdentityStartEmailVerificationResponse> {
 	let user_ent = ctx.auth().user(ctx.op_ctx()).await?;
 
-	// If no Turnstile key defined, skip captcha
+	// Log user initiating the verification
+	tracing::info!(user_id = %user_ent.user_id, email = %body.email, "starting email verification");
+
+	// Captcha validation logic (if enabled in config)
 	if let Some(secret_key) = &ctx
 		.config()
 		.server()?
@@ -27,6 +33,8 @@ pub async fn start(
 	{
 		if let Some(captcha) = body.captcha {
 			if captcha.turnstile.is_some() {
+				tracing::debug!("Captcha provided, validating...");
+
 				op!([ctx] captcha_verify {
 					topic: HashMap::<String, String>::from([
 						("kind".into(), "auth:verification-start".into()),
@@ -37,7 +45,6 @@ pub async fn start(
 						requests_before_reverify: 0,
 						verification_ttl: 0,
 						turnstile: Some(backend::captcha::captcha_config::Turnstile {
-							// Not needed for captcha verification
 							site_key: "".to_string(),
 							secret_key: secret_key.read().clone(),
 						}),
@@ -48,11 +55,15 @@ pub async fn start(
 				})
 				.await?;
 			} else {
+				tracing::warn!("Captcha field missing Turnstile value");
 				bail_with!(CAPTCHA_CAPTCHA_INVALID)
 			}
 		} else {
+			tracing::warn!("Captcha not provided in verification start");
 			bail_with!(CAPTCHA_CAPTCHA_INVALID)
 		}
+	} else {
+		tracing::info!("No Turnstile secret key configured; skipping captcha verification");
 	}
 
 	let res = op!([ctx] email_verification_create {
@@ -63,10 +74,15 @@ pub async fn start(
 
 	let verification_id = unwrap_ref!(res.verification_id).as_uuid();
 
+	tracing::info!(%verification_id, "email verification created");
+
 	Ok(models::AuthIdentityStartEmailVerificationResponse { verification_id })
 }
 
-// MARK: POST /identity/email/complete-verification
+/// MARK: POST /identity/email/complete-verification
+///
+/// Completes the email verification process. If the email is linked
+/// to another identity, switches users. Otherwise, links it to the current user.
 pub async fn complete(
 	ctx: Ctx<Auth>,
 	response: &mut Builder,
@@ -76,6 +92,8 @@ pub async fn complete(
 
 	let origin = unwrap!(ctx.origin());
 
+	tracing::info!(user_id = %user_ent.user_id, "completing email verification");
+
 	let res = op!([ctx] email_verification_complete {
 		verification_id: Some(body.verification_id.into()),
 		code: body.code.clone()
@@ -84,8 +102,8 @@ pub async fn complete(
 
 	let status = unwrap!(StatusProto::from_i32(res.status));
 
-	// Handle error statuses
-	let err = match status {
+	// Handle different verification outcomes
+	let err_status = match status {
 		StatusProto::Correct => None,
 		StatusProto::AlreadyComplete => Some(models::AuthCompleteStatus::AlreadyComplete),
 		StatusProto::Expired => Some(models::AuthCompleteStatus::Expired),
@@ -93,22 +111,25 @@ pub async fn complete(
 		StatusProto::Incorrect => Some(models::AuthCompleteStatus::Incorrect),
 	};
 
-	if let Some(status) = err {
+	if let Some(status) = err_status {
+		tracing::warn!(email = %res.email, status = ?status, "email verification failed");
 		return Ok(models::AuthIdentityCompleteEmailVerificationResponse { status });
 	}
+
+	tracing::info!(email = %res.email, "email verification passed");
 
 	let email_res = op!([ctx] user_resolve_email {
 		emails: vec![res.email.clone()],
 	})
 	.await?;
 
-	// Switch to new user
+	// Handle account switching
 	if let Some(new_user) = email_res.users.first() {
-		tracing::info!(email = %new_user.email, "resolved email");
+		tracing::info!(email = %new_user.email, "resolved email to existing user");
 
 		let new_user_id = unwrap_ref!(new_user.user_id).as_uuid();
 
-		tracing::info!(old_user_id = %user_ent.user_id, %new_user_id, "identity found, switching user");
+		tracing::info!(old_user_id = %user_ent.user_id, %new_user_id, "switching user identity");
 
 		let token_res = op!([ctx] user_token_create {
 			user_id: Some(new_user_id.into()),
@@ -116,40 +137,36 @@ pub async fn complete(
 		})
 		.await?;
 
-		// Set refresh token
-		{
-			let (k, v) = refresh_token_header(ctx.config(), origin, token_res.refresh_token)?;
-			unwrap!(response.headers_mut()).insert(k, v);
-		}
+		// Set refresh token cookie
+		let (k, v) = refresh_token_header(ctx.config(), origin, token_res.refresh_token)?;
+		unwrap!(response.headers_mut()).insert(k, v);
 
-		Ok(models::AuthIdentityCompleteEmailVerificationResponse {
+		return Ok(models::AuthIdentityCompleteEmailVerificationResponse {
 			status: models::AuthCompleteStatus::SwitchIdentity,
-		})
+		});
 	}
-	// Associate identity with existing user
-	else {
-		tracing::info!(user_id = %user_ent.user_id, "creating new identity for guest");
 
-		op!([ctx] user_identity_create {
-			user_id: Some(Into::into(user_ent.user_id)),
-			identity: Some(backend::user_identity::Identity {
-				kind: Some(backend::user_identity::identity::Kind::Email(
-					backend::user_identity::identity::Email {
-						email: res.email.clone(),
-					}
-				))
-			})
-		})
-		.await?;
+	// No matching user, associate identity with current one
+	tracing::info!(user_id = %user_ent.user_id, "linking verified email to guest account");
 
-		// Send user update to hub
-		msg!([ctx] user::msg::update(user_ent.user_id) {
-			user_id: Some(user_ent.user_id.into()),
+	op!([ctx] user_identity_create {
+		user_id: Some(Into::into(user_ent.user_id)),
+		identity: Some(backend::user_identity::Identity {
+			kind: Some(backend::user_identity::identity::Kind::Email(
+				backend::user_identity::identity::Email {
+					email: res.email.clone(),
+				}
+			))
 		})
-		.await?;
+	})
+	.await?;
 
-		Ok(models::AuthIdentityCompleteEmailVerificationResponse {
-			status: models::AuthCompleteStatus::LinkedAccountAdded,
-		})
-	}
+	msg!([ctx] user::msg::update(user_ent.user_id) {
+		user_id: Some(user_ent.user_id.into()),
+	})
+	.await?;
+
+	Ok(models::AuthIdentityCompleteEmailVerificationResponse {
+		status: models::AuthCompleteStatus::LinkedAccountAdded,
+	})
 }
