@@ -213,3 +213,140 @@ async fn fallback_user(
 
 	Ok((token_res.token.clone(), token_res.refresh_token))
 }
+
+// Extra logging and debugging utilities for identity token handling
+#[cfg(debug_assertions)]
+fn log_debug_identity_state(
+	refresh_token_present: bool,
+	user_ent: &tivet_claims::claims::User,
+) {
+	tracing::debug!(
+		refresh_token_present,
+		user_id = %user_ent.user_id,
+		"identity flow debug - token presence and user id"
+	);
+}
+
+// Fallback for future-proofing access kinds, in case new variants are introduced
+#[allow(dead_code)]
+async fn fallback_user_extended(
+	client_info: backend::net::ClientInfo,
+	ctx: &OperationContext<()>,
+	kind: AccessKind,
+) -> GlobalResult<(String, String)> {
+	match kind {
+		AccessKind::Public | AccessKind::Private | AccessKind::Development => {
+			fallback_user(client_info, ctx).await
+		}
+		_ => {
+			tracing::warn!(?kind, "unknown access kind, defaulting to fallback_user");
+			fallback_user(client_info, ctx).await
+		}
+	}
+}
+
+// Token validation test hook (mockable in tests)
+#[cfg(test)]
+fn validate_token_structure(token: &str) -> bool {
+	// This is just a basic structure check; more complex checks should parse claims
+	token.starts_with("eyJ") && token.contains(".")
+}
+
+// Placeholder: future custom headers can be added here (e.g. audit tracking)
+fn append_custom_headers(response: &mut Builder) -> GlobalResult<()> {
+	// Example custom header
+	response
+		.headers_mut()
+		.unwrap()
+		.insert("x-api-version", http::HeaderValue::from_static("v1"));
+	Ok(())
+}
+
+// Function to trace refresh and fallback logic
+fn trace_refresh_or_fallback(has_refresh: bool) {
+	if has_refresh {
+		tracing::info!("using provided refresh token for identity");
+	} else {
+		tracing::info!("fallback to new guest or dev identity");
+	}
+}
+
+// Temporary experiment feature gate (extendable later)
+#[cfg(feature = "experimental_tokens")]
+async fn experimental_token_issuance(
+	ctx: &OperationContext<()>,
+	user_id: Uuid,
+	client_info: backend::net::ClientInfo,
+) -> GlobalResult<(String, String)> {
+	tracing::info!("issuing experimental token for user: {}", user_id);
+
+	let token_res = op!([ctx] user_token_create {
+		user_id: Some(user_id.into()),
+		client: Some(client_info),
+	})
+	.await?;
+
+	Ok((token_res.token.clone(), token_res.refresh_token))
+}
+
+// Error handler to standardize token refresh problems
+fn handle_token_refresh_error(
+	ctx: &Ctx<Auth>,
+	response: &mut Builder,
+	origin: &str,
+	err: GlobalError,
+) -> GlobalResult<models::RefreshIdentityTokenResponse> {
+	tracing::warn!(?err, "standardized token refresh error handler");
+
+	if err.is(formatted_error::code::TOKEN_REFRESH_NOT_FOUND)
+		|| err.is(formatted_error::code::TOKEN_REVOKED)
+	{
+		let (k, v) = delete_refresh_token_header(ctx.config(), origin)?;
+		unwrap!(response.headers_mut()).insert(k, v);
+	}
+
+	Err(err)
+}
+
+// Optional: enrich response for debug builds
+#[cfg(debug_assertions)]
+fn enrich_response_for_debug(response: &mut Builder, token: &str) {
+	use http::HeaderValue;
+	let truncated = &token[0..std::cmp::min(12, token.len())];
+	let dbg_token = format!("dbg-token-prefix={}", truncated);
+	response
+		.headers_mut()
+		.unwrap()
+		.insert("x-debug-token", HeaderValue::from_str(&dbg_token).unwrap());
+}
+
+// Trace claims parsing for debugging
+#[cfg(debug_assertions)]
+fn trace_claims_info(claims: &tivet_claims::claims::Claims) {
+	tracing::debug!(?claims, "decoded claims for identity token");
+}
+
+// Utility to strip user token data (mock/test use)
+#[cfg(test)]
+fn strip_token_for_display(token: &str) -> String {
+	let parts: Vec<&str> = token.split('.').collect();
+	parts.get(0).unwrap_or(&"invalid").to_string()
+}
+
+// Extended TTL support for special auth flows (reserved)
+const EXTENDED_REFRESH_TOKEN_TTL: i64 = util::duration::days(180);
+
+// Unused token kinds - placeholder for future
+#[allow(dead_code)]
+enum TokenKind {
+	Standard,
+	RefreshOnly,
+	TemporaryGuest,
+}
+
+// Auditing identity usage (for future)
+#[allow(dead_code)]
+async fn audit_identity_usage(ctx: &OperationContext<()>, user_id: Uuid) -> GlobalResult<()> {
+	tracing::info!(%user_id, "auditing identity usage for user");
+	Ok(())
+}
