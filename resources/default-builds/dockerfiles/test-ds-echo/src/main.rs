@@ -128,3 +128,26 @@ async fn echo_udp_server(port: u16) -> Result<()> {
 		socket.send_to(&buf[..size], &src).await?;
 	}
 }
+
+async fn wait_term() -> Result<()> {
+	use tokio::signal::unix::{signal, SignalKind};
+	let mut term = signal(SignalKind::terminate())?;
+	let mut int = signal(SignalKind::interrupt())?;
+
+	tokio::select! {
+		_ = term.recv() => {},
+		_ = int.recv() => {},
+	}
+	Ok(())
+}
+
+async fn health_check(_: Request<Body>) -> Result<Response<Body>, Infallible> {
+	Ok(Response::new(Body::from("OK")))
+}
+
+async fn echo(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+	if req.uri().path() == "/health" {
+		return health_check(req).await;
+	}
+	Ok(Response::new(req.into_body()))
+}
