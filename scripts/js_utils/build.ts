@@ -16,60 +16,102 @@
 //
 // This will output the output to `out/`.
 
-import { resolve } from "@std/path";
+import { resolve, join } from "@std/path";
+import { walk } from "@std/fs";
+import { parse } from "@std/flags";
 
-const [entry] = Deno.args;
+const parsedArgs = parse(Deno.args, {
+	boolean: ["watch", "minify"],
+	default: {
+		minify: false,
+		watch: false,
+	},
+});
+
+const entry = parsedArgs._[0];
+if (!entry || typeof entry !== "string") {
+	console.error("Error: Missing script entry point.");
+	Deno.exit(1);
+}
+
 console.log("Building", entry);
 
 const ROOT_DIR = resolve(import.meta.dirname!, "..", "..");
 const JS_UTILS_DIR = resolve(ROOT_DIR, "packages/toolchain/js-utils-embed/js");
-//const JS_UTILS_DIR = "/Users/nathan/Downloads/js-utils"
+
+const entryAbs = resolve(Deno.cwd(), entry);
+const outDir = resolve(Deno.cwd(), "dist");
 
 const input = {
 	projectRoot: Deno.cwd(),
-	entryPoint: resolve(Deno.cwd(), entry),
-	outDir: resolve(Deno.cwd(), "dist"),
+	entryPoint: entryAbs,
+	outDir,
 	bundle: {
-		minify: false,
+		minify: parsedArgs.minify,
 		analyzeResult: false,
 		logLevel: "debug",
 	},
 };
 
-//const output0 = await new Deno.Command("deno", {
-//	args: [
-//		"install",
-//	],
-//	env: {
-//		JS_UTILS_ROOT: JS_UTILS_DIR,
-//	},
-//	cwd: JS_UTILS_DIR,
-//	stdout: "inherit",
-//	stderr: "inherit",
-//}).output();
-//if (!output0.success) {
-//	throw new Error("Failed");
-//}
+// Timer
+const start = performance.now();
 
-const output = await new Deno.Command("deno", {
-	args: [
-		"run",
-		"--allow-all",
-		"--unstable-sloppy-imports",
-		"--vendor",  // Required for unenv files to be readable
-		"src/tasks/build/mod.ts",
-		"--input",
-		JSON.stringify(input),
-	],
-	env: {
-		JS_UTILS_ROOT: JS_UTILS_DIR,
-	},
-	cwd: JS_UTILS_DIR,
-	stdout: "inherit",
-	stderr: "inherit",
-}).output();
-if (!output.success) {
-	throw new Error("Failed");
+async function buildOnce() {
+	console.log(`[${new Date().toISOString()}] Starting build...`);
+
+	const output = await new Deno.Command("deno", {
+		args: [
+			"run",
+			"--allow-all",
+			"--unstable-sloppy-imports",
+			"--vendor",
+			"src/tasks/build/mod.ts",
+			"--input",
+			JSON.stringify(input),
+		],
+		env: {
+			JS_UTILS_ROOT: JS_UTILS_DIR,
+		},
+		cwd: JS_UTILS_DIR,
+		stdout: "inherit",
+		stderr: "inherit",
+	}).output();
+
+	if (!output.success) {
+		console.error("Build failed");
+		return false;
+	}
+
+	const duration = (performance.now() - start).toFixed(0);
+	console.log(`✅ Build succeeded in ${duration}ms`);
+
+	await inspectOutputSize();
+
+	return true;
 }
 
-console.log("output", output);
+async function inspectOutputSize() {
+	console.log("Inspecting output files...");
+	for await (const entry of walk(outDir, { exts: [".js", ".map"], includeFiles: true })) {
+		const info = await Deno.stat(entry.path);
+		const sizeKb = (info.size / 1024).toFixed(2);
+		console.log(`  ${entry.name} - ${sizeKb} KB`);
+	}
+}
+
+async function watchAndRebuild() {
+	const watcher = Deno.watchFs(entryAbs, { recursive: false });
+	console.log("👀 Watching for changes...");
+	for await (const _event of watcher) {
+		console.log("🔁 Change detected, rebuilding...");
+		await buildOnce();
+	}
+}
+
+const success = await buildOnce();
+
+if (parsedArgs.watch && success) {
+	await watchAndRebuild();
+} else if (!success) {
+	Deno.exit(1);
+}
