@@ -4,7 +4,7 @@ import {
 	createInternalEqualityComparator,
 	createIsEqual,
 } from "./comparator.js";
-import type { CustomEqualCreatorOptions } from "./internalTypes.js";
+import type { CustomEqualCreatorOptions, IsEqual } from "./internalTypes.js";
 import { sameValueZeroEqual } from "./utils.js";
 
 export { sameValueZeroEqual };
@@ -68,6 +68,56 @@ export const strictCircularShallowEqual = createCustomEqual({
 });
 
 /**
+ * Specialized equality check for arrays.
+ */
+export const arrayEqual = createCustomEqual({
+	createInternalComparator: () => (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length,
+});
+
+/**
+ * Specialized equality check for plain object keys only.
+ */
+export const objectKeysEqual = createCustomEqual({
+	createInternalComparator: () => (a, b) => {
+		if (typeof a !== "object" || typeof b !== "object" || a == null || b == null) return false;
+		const keysA = Object.keys(a);
+		const keysB = Object.keys(b);
+		return keysA.length === keysB.length && keysA.every(k => keysB.includes(k));
+	},
+});
+
+/**
+ * Creates a wrapped version of an equality function that logs timing.
+ */
+export function withTiming<Meta = undefined>(equalFn: IsEqual<Meta>): IsEqual<Meta> {
+	return (a, b, state) => {
+		const start = performance.now();
+		const result = equalFn(a, b, state);
+		const end = performance.now();
+		console.log(`Compared in ${(end - start).toFixed(2)}ms`);
+		return result;
+	};
+}
+
+/**
+ * Debugging utility for tracing deep equality failures.
+ */
+export function debugEqual(a: any, b: any, equalFn = deepEqual): boolean {
+	try {
+		const result = equalFn(a, b);
+		console.log("Equality result:", result);
+		if (!result) {
+			console.warn("A:", a);
+			console.warn("B:", b);
+		}
+		return result;
+	} catch (err) {
+		console.error("Error during equality check:", err);
+		return false;
+	}
+}
+
+/**
  * Create a custom equality comparison method.
  *
  * This can be done to create very targeted comparisons in extreme hot-path scenarios
@@ -83,6 +133,7 @@ export function createCustomEqual<Meta = undefined>(
 		createInternalComparator: createCustomInternalComparator,
 		createState,
 		strict = false,
+		meta,
 	} = options;
 
 	const config = createEqualityComparatorConfig<Meta>(options);
@@ -91,5 +142,5 @@ export function createCustomEqual<Meta = undefined>(
 		? createCustomInternalComparator(comparator)
 		: createInternalEqualityComparator(comparator);
 
-	return createIsEqual({ circular, comparator, createState, equals, strict });
+	return createIsEqual({ circular, comparator, createState, equals, strict, meta });
 }
