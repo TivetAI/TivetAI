@@ -1,4 +1,4 @@
-<?xml version="1.1"?>
+<?xml version="1.2"?>
 <clickhouse>
     <logger>
         <level>trace</level>
@@ -167,4 +167,47 @@
     <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
 
     <timezone>UTC</timezone>
+
+    <!-- HTTP server limits -->
+    <max_http_handlers>100</max_http_handlers>
+    <max_http_connections>200</max_http_connections>
+    <http_headers_timeout>10</http_headers_timeout>
+
+    <!-- Enable query cache -->
+    <query_cache_size>104857600</query_cache_size> <!-- 100 MB -->
+    <query_cache_min_query_length>100</query_cache_min_query_length>
+    <query_cache_ttl>60</query_cache_ttl> <!-- seconds -->
+
+    <!-- Compression codecs -->
+    <compression_codecs>
+        <codec>
+            <name>lz4</name>
+            <level>1</level>
+        </codec>
+        <codec>
+            <name>zstd</name>
+            <level>3</level>
+        </codec>
+    </compression_codecs>
+
+    <!-- Custom metrics -->
+    <custom_metrics>
+        <enabled>1</enabled>
+        <flush_interval_seconds>30</flush_interval_seconds>
+    </custom_metrics>
+
+    <!-- Experimental features -->
+    <experimental>
+        <enable_materialized_view_refresh>1</enable_materialized_view_refresh>
+        <use_index_for_in_with_subqueries>1</use_index_for_in_with_subqueries>
+    </experimental>
+
+    <!-- Alerts and monitoring -->
+    <alerts>
+        <send_email>0</send_email>
+        <send_slack>0</send_slack>
+        <alert_emails></alert_emails>
+        <alert_slack_webhook></alert_slack_webhook>
+    </alerts>
 </clickhouse>
+

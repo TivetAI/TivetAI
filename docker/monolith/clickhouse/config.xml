@@ -1,28 +1,27 @@
-<?xml version="1.0"?>
-
-<!-- This config file is intended to make sure that migrations are compatible with ClickHouse Cloud. We don't use replication in development, but we have to be able to support the `RelpicatedMergeTree` engine. -->
+<?xml version="1.2"?>
 <clickhouse>
-	<path>/data/clickhouse/</path>
-
     <logger>
         <level>trace</level>
         <console>1</console>
+        <log>/var/log/clickhouse-server/clickhouse.log</log>
+        <errorlog>/var/log/clickhouse-server/clickhouse.err.log</errorlog>
+        <size>1000M</size>
+        <count>10</count>
     </logger>
 
     <!-- Enable embedded ZooKeeper -->
     <zookeeper>
         <node>
             <host>localhost</host>
-            <port>9307</port>
+            <port>9181</port>
         </node>
     </zookeeper>
 
-    <!-- Start embedded ZooKeeper -->
     <keeper_server>
-        <tcp_port>9307</tcp_port>
+        <tcp_port>9181</tcp_port>
         <server_id>1</server_id>
-        <!-- <log_storage_path>/data/clickhouse/coordination/log</log_storage_path> -->
-        <!-- <snapshot_storage_path>/data/clickhouse/coordination/snapshots</snapshot_storage_path> -->
+        <log_storage_path>/var/lib/clickhouse/coordination/log</log_storage_path>
+        <snapshot_storage_path>/var/lib/clickhouse/coordination/snapshots</snapshot_storage_path>
 
         <coordination_settings>
             <operation_timeout_ms>10000</operation_timeout_ms>
@@ -34,29 +33,181 @@
             <server>
                 <id>1</id>
                 <hostname>localhost</hostname>
-                <port>9308</port>
+                <port>9234</port>
             </server>
         </raft_configuration>
     </keeper_server>
 
-	<!-- Default ZooKeeper paths for replication -->
     <default_replica_path>/clickhouse/tables/{shard}/{database}/{table}</default_replica_path>
     <default_replica_name>{replica}</default_replica_name>
 
-    <!-- Replication configuration -->
     <macros>
         <cluster>cluster1</cluster>
         <replica>replica1</replica>
         <shard>01</shard>
     </macros>
 
-	<!-- Update ports to prevent conflicts -->
-	<http_port>9300</http_port>
-	<https_port>9301</https_port>
-	<tcp_port>9302</tcp_port>
-	<interserver_http_port>9303</interserver_http_port>
-	<metrics_port>9304</metrics_port>
-	<odbc_port>9305</odbc_port>
-	<mysql_port>9306</mysql_port>
+    <profiles>
+        <default>
+            <max_memory_usage>10000000000</max_memory_usage>
+            <use_uncompressed_cache>1</use_uncompressed_cache>
+            <load_balancing>random</load_balancing>
+            <enable_optimize_predicate_expression>1</enable_optimize_predicate_expression>
+            <readonly>0</readonly>
+            <allow_introspection_functions>1</allow_introspection_functions>
+        </default>
+    </profiles>
+
+    <users>
+        <default>
+            <password></password>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+            <access_management>1</access_management>
+        </default>
+    </users>
+
+    <compression>
+        <case>
+            <min_part_size>10000000000</min_part_size>
+            <min_part_size_ratio>0.01</min_part_size_ratio>
+            <method>lz4</method>
+        </case>
+    </compression>
+
+    <merge_tree>
+        <parts_to_throw_insert>300</parts_to_throw_insert>
+        <parts_to_delay_insert>150</parts_to_delay_insert>
+        <max_delay_to_insert>1</max_delay_to_insert>
+    </merge_tree>
+
+    <query_log>
+        <database>system</database>
+        <table>query_log</table>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </query_log>
+
+    <query_thread_log>
+        <database>system</database>
+        <table>query_thread_log</table>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </query_thread_log>
+
+    <text_log>
+        <database>system</database>
+        <table>text_log</table>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </text_log>
+
+    <query_profiler>
+        <cpu_time_period_ns>100000</cpu_time_period_ns>
+        <real_time_period_ns>100000</real_time_period_ns>
+    </query_profiler>
+
+    <http_server_default_response>
+        <response>ClickHouse server ready</response>
+    </http_server_default_response>
+
+    <listen_host>::</listen_host>
+
+    <tcp_port_secure>9440</tcp_port_secure>
+    <https_port>8443</https_port>
+    <tcp_keep_alive_timeout>10</tcp_keep_alive_timeout>
+
+    <max_connections>4096</max_connections>
+    <keep_alive_timeout>3</keep_alive_timeout>
+    <max_concurrent_queries>100</max_concurrent_queries>
+
+    <display_name>ClickHouse Local</display_name>
+    <max_server_memory_usage_to_ram_ratio>0.9</max_server_memory_usage_to_ram_ratio>
+
+    <send_crash_reports>1</send_crash_reports>
+
+    <builtin_dictionaries_reload_interval>3600</builtin_dictionaries_reload_interval>
+
+    <format>
+        <csv>
+            <delimiter>,</delimiter>
+        </csv>
+    </format>
+
+    <remote_servers>
+        <cluster1>
+            <shard>
+                <replica>
+                    <host>localhost</host>
+                    <port>9000</port>
+                </replica>
+            </shard>
+        </cluster1>
+    </remote_servers>
+
+    <system_metrics>
+        <collect_interval>60</collect_interval>
+    </system_metrics>
+
+    <asynchronous_metrics>
+        <collect_interval_milliseconds>10000</collect_interval_milliseconds>
+    </asynchronous_metrics>
+
+    <dictionaries_config>/etc/clickhouse-server/dictionaries/*.xml</dictionaries_config>
+
+    <uncompressed_cache_size>8589934592</uncompressed_cache_size>
+    <mark_cache_size>5368709120</mark_cache_size>
+
+    <max_memory_usage_for_all_queries>30000000000</max_memory_usage_for_all_queries>
+    <max_bytes_before_external_group_by>1000000000</max_bytes_before_external_group_by>
+    <max_bytes_before_external_sort>1000000000</max_bytes_before_external_sort>
+
+    <path>/var/lib/clickhouse/</path>
+    <tmp_path>/var/lib/clickhouse/tmp/</tmp_path>
+    <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
+
+    <timezone>UTC</timezone>
+
+    <!-- HTTP server limits -->
+    <max_http_handlers>100</max_http_handlers>
+    <max_http_connections>200</max_http_connections>
+    <http_headers_timeout>10</http_headers_timeout>
+
+    <!-- Enable query cache -->
+    <query_cache_size>104857600</query_cache_size> <!-- 100 MB -->
+    <query_cache_min_query_length>100</query_cache_min_query_length>
+    <query_cache_ttl>60</query_cache_ttl> <!-- seconds -->
+
+    <!-- Compression codecs -->
+    <compression_codecs>
+        <codec>
+            <name>lz4</name>
+            <level>1</level>
+        </codec>
+        <codec>
+            <name>zstd</name>
+            <level>3</level>
+        </codec>
+    </compression_codecs>
+
+    <!-- Custom metrics -->
+    <custom_metrics>
+        <enabled>1</enabled>
+        <flush_interval_seconds>30</flush_interval_seconds>
+    </custom_metrics>
+
+    <!-- Experimental features -->
+    <experimental>
+        <enable_materialized_view_refresh>1</enable_materialized_view_refresh>
+        <use_index_for_in_with_subqueries>1</use_index_for_in_with_subqueries>
+    </experimental>
+
+    <!-- Alerts and monitoring -->
+    <alerts>
+        <send_email>0</send_email>
+        <send_slack>0</send_slack>
+        <alert_emails></alert_emails>
+        <alert_slack_webhook></alert_slack_webhook>
+    </alerts>
 </clickhouse>
 
