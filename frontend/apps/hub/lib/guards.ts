@@ -152,3 +152,158 @@ export async function guardUuids({
 		});
 	}
 }
+
+/** New: Utility to preload multiple queries at once */
+export async function preloadQueries(
+	queryClient: QueryClient,
+	queryOptionsList: Parameters<QueryClient["fetchQuery"]>[0][],
+) {
+	await Promise.all(queryOptionsList.map((opts) => queryClient.fetchQuery(opts)));
+}
+
+/** New: Guard for user roles, throws redirect if role is insufficient */
+export async function guardRole({
+	auth,
+	requiredRole,
+}: {
+	auth: AuthContext;
+	requiredRole: string;
+}) {
+	if (!auth.userRoles.includes(requiredRole)) {
+		throw redirect({
+			to: "/unauthorized",
+		});
+	}
+}
+
+/** New: Redirect helper for projects with no environments */
+export async function guardProjectHasEnvironments({
+	queryClient,
+	projectId,
+}: {
+	queryClient: QueryClient;
+	projectId: string;
+}) {
+	const projectData = await queryClient.fetchQuery(projectQueryOptions(projectId));
+	if (projectData.game.namespaces.length === 0) {
+		throw redirect({
+			to: "/projects/$projectNameId",
+			params: { projectNameId: projectData.game.nameId },
+		});
+	}
+}
+
+/** New: Validates and normalizes project and environment IDs */
+export async function validateAndNormalizeIds({
+	queryClient,
+	projectNameId,
+	environmentNameId,
+}: {
+	queryClient: QueryClient;
+	projectNameId: string;
+	environmentNameId?: string;
+}) {
+	let normalizedProjectNameId = projectNameId;
+	let normalizedEnvironmentNameId = environmentNameId;
+
+	if (isUuid(projectNameId)) {
+		const response = await queryClient.fetchQuery(projectsByGroupQueryOptions());
+		const project = response?.games.find((p) => p.gameId === projectNameId);
+		if (project) {
+			normalizedProjectNameId = project.nameId;
+		}
+	}
+
+	if (environmentNameId && isUuid(environmentNameId)) {
+		const envResponse = await queryClient.fetchQuery(
+			projectEnvironmentQueryOptions({
+				projectId: normalizedProjectNameId,
+				environmentId: environmentNameId,
+			}),
+		);
+
+		if (envResponse.namespace) {
+			normalizedEnvironmentNameId = envResponse.namespace.nameId;
+		}
+	}
+
+	return { normalizedProjectNameId, normalizedEnvironmentNameId };
+}
+
+/** New: Guard to ensure user is authenticated */
+export async function guardAuthenticated({ auth }: { auth: AuthContext }) {
+	if (!auth.isAuthenticated) {
+		throw redirect({ to: "/login" });
+	}
+}
+
+/** New: Guard to check project membership */
+export async function guardProjectMembership({
+	auth,
+	queryClient,
+	projectId,
+}: {
+	auth: AuthContext;
+	queryClient: QueryClient;
+	projectId: string;
+}) {
+	const membership = await queryClient.fetchQuery(projectByIdQueryOptions(projectId));
+	const userIsMember = membership.games.some((game) =>
+		auth.userTeams.includes(game.groupId),
+	);
+	if (!userIsMember) {
+		throw redirect({ to: "/unauthorized" });
+	}
+}
+
+/** New: Utility for extracting param or throwing */
+export function getParamOrThrow(
+	params: Record<string, string | undefined>,
+	key: string,
+): string {
+	const value = params[key];
+	if (!value) {
+		throw notFound();
+	}
+	return value;
+}
+
+/** New: Guard to check if current project is archived */
+export async function guardProjectNotArchived({
+	queryClient,
+	projectId,
+}: {
+	queryClient: QueryClient;
+	projectId: string;
+}) {
+	const project = await queryClient.fetchQuery(projectByIdQueryOptions(projectId));
+	if (project.game.isArchived) {
+		throw redirect({
+			to: "/projects-archived",
+		});
+	}
+}
+
+/** New: Guard to ensure environment is active */
+export async function guardEnvironmentActive({
+	queryClient,
+	projectId,
+	environmentNameId,
+}: {
+	queryClient: QueryClient;
+	projectId: string;
+	environmentNameId: string;
+}) {
+	const envData = await queryClient.fetchQuery(
+		projectEnvironmentQueryOptions({
+			projectId,
+			environmentId: environmentNameId,
+		}),
+	);
+
+	if (!envData.namespace.isActive) {
+		throw redirect({
+			to: `/projects/${projectId}/environments`,
+		});
+	}
+}
