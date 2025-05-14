@@ -9,23 +9,28 @@
 //
 // To run:
 //
-// ````
+// ```
 // cd path/to/deno/project
-// /path/to/scripts/js_utils/build.ts name_of_script.ts
-// ````
+// /path/to/scripts/js_utils/build.ts name_of_script.ts --outDir=custom_dist --minify --watch
+// ```
 //
-// This will output the output to `out/`.
+// This will output the build to `dist/` by default, or to the directory
+// specified by --outDir.
 
-import { resolve, join } from "@std/path";
-import { walk } from "@std/fs";
-import { parse } from "@std/flags";
+// Imports
+import { resolve, join } from "https://deno.land/std@0.114.0/path/mod.ts";
+import { walk } from "https://deno.land/std@0.114.0/fs/mod.ts";
+import { parse } from "https://deno.land/std@0.114.0/flags/mod.ts";
 
+// Parse command line args
 const parsedArgs = parse(Deno.args, {
-	boolean: ["watch", "minify"],
+	boolean: ["watch", "minify", "quiet"],
 	default: {
 		minify: false,
 		watch: false,
+		quiet: false,
 	},
+	string: ["outDir"],
 });
 
 const entry = parsedArgs._[0];
@@ -34,13 +39,18 @@ if (!entry || typeof entry !== "string") {
 	Deno.exit(1);
 }
 
-console.log("Building", entry);
+const quiet = parsedArgs.quiet;
+const outDir = parsedArgs.outDir
+	? resolve(Deno.cwd(), parsedArgs.outDir)
+	: resolve(Deno.cwd(), "dist");
+
+if (!quiet) console.log("Building", entry);
+if (!quiet) console.log("Output directory:", outDir);
 
 const ROOT_DIR = resolve(import.meta.dirname!, "..", "..");
 const JS_UTILS_DIR = resolve(ROOT_DIR, "packages/toolchain/js-utils-embed/js");
 
 const entryAbs = resolve(Deno.cwd(), entry);
-const outDir = resolve(Deno.cwd(), "dist");
 
 const input = {
 	projectRoot: Deno.cwd(),
@@ -49,15 +59,51 @@ const input = {
 	bundle: {
 		minify: parsedArgs.minify,
 		analyzeResult: false,
-		logLevel: "debug",
+		logLevel: quiet ? "error" : "debug",
 	},
 };
 
 // Timer
 const start = performance.now();
 
+// Helper for colored console output
+const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
+const yellow = (s: string) => `\x1b[33m${s}\x1b[0m`;
+const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
+
+// Convert bytes to human readable string
+function humanFileSize(bytes: number) {
+	const thresh = 1024;
+	if (Math.abs(bytes) < thresh) {
+		return bytes + " B";
+	}
+	const units = ["KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+	let u = -1;
+	do {
+		bytes /= thresh;
+		++u;
+	} while (Math.abs(bytes) >= thresh && u < units.length - 1);
+	return bytes.toFixed(2) + " " + units[u];
+}
+
+// Clean old build files from output dir (optional)
+async function cleanOutputDir() {
+	try {
+		for await (const file of walk(outDir)) {
+			if (file.isFile) {
+				await Deno.remove(file.path);
+				if (!quiet) console.log(`Removed old file: ${file.path}`);
+			}
+		}
+	} catch (e) {
+		if (!quiet) console.warn("Warning cleaning output dir:", e.message);
+	}
+}
+
 async function buildOnce() {
-	console.log(`[${new Date().toISOString()}] Starting build...`);
+	if (!quiet) console.log(`[${new Date().toISOString()}] Starting build...`);
+
+	await cleanOutputDir();
 
 	const output = await new Deno.Command("deno", {
 		args: [
@@ -73,17 +119,17 @@ async function buildOnce() {
 			JS_UTILS_ROOT: JS_UTILS_DIR,
 		},
 		cwd: JS_UTILS_DIR,
-		stdout: "inherit",
-		stderr: "inherit",
+		stdout: quiet ? "null" : "inherit",
+		stderr: quiet ? "null" : "inherit",
 	}).output();
 
 	if (!output.success) {
-		console.error("Build failed");
+		console.error(red("Build failed"));
 		return false;
 	}
 
 	const duration = (performance.now() - start).toFixed(0);
-	console.log(`✅ Build succeeded in ${duration}ms`);
+	if (!quiet) console.log(green(`✅ Build succeeded in ${duration}ms`));
 
 	await inspectOutputSize();
 
@@ -91,19 +137,25 @@ async function buildOnce() {
 }
 
 async function inspectOutputSize() {
-	console.log("Inspecting output files...");
+	if (!quiet) console.log("Inspecting output files...");
 	for await (const entry of walk(outDir, { exts: [".js", ".map"], includeFiles: true })) {
 		const info = await Deno.stat(entry.path);
-		const sizeKb = (info.size / 1024).toFixed(2);
-		console.log(`  ${entry.name} - ${sizeKb} KB`);
+		const sizeStr = humanFileSize(info.size);
+
+		// Color by size: <100KB green, <500KB yellow, else red
+		let sizeColored = green(sizeStr);
+		if (info.size > 500 * 1024) sizeColored = red(sizeStr);
+		else if (info.size > 100 * 1024) sizeColored = yellow(sizeStr);
+
+		if (!quiet) console.log(`  ${entry.name} - ${sizeColored}`);
 	}
 }
 
 async function watchAndRebuild() {
 	const watcher = Deno.watchFs(entryAbs, { recursive: false });
-	console.log("👀 Watching for changes...");
+	if (!quiet) console.log("👀 Watching for changes...");
 	for await (const _event of watcher) {
-		console.log("🔁 Change detected, rebuilding...");
+		if (!quiet) console.log("🔁 Change detected, rebuilding...");
 		await buildOnce();
 	}
 }
