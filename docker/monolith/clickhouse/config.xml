@@ -1,4 +1,4 @@
-<?xml version="1.2"?>
+<?xml version="2.0"?>
 <clickhouse>
     <logger>
         <level>trace</level>
@@ -128,6 +128,30 @@
 
     <builtin_dictionaries_reload_interval>3600</builtin_dictionaries_reload_interval>
 
+    <!-- Query cache settings -->
+    <query_cache_size>104857600</query_cache_size> <!-- 100 MB -->
+    <query_cache_min_query_length>100</query_cache_min_query_length>
+    <query_cache_ttl>60</query_cache_ttl> <!-- seconds -->
+
+    <!-- User quota example -->
+    <quotas>
+        <default>
+            <interval>3600</interval> <!-- 1 hour -->
+            <queries>1000</queries>
+            <errors>10</errors>
+            <result_rows>1000000</result_rows>
+            <read_rows>10000000</read_rows>
+            <execution_time>3600</execution_time> <!-- seconds -->
+        </default>
+    </quotas>
+
+    <!-- HTTP/2 server support -->
+    <http_server>
+        <enable_http2>1</enable_http2>
+        <ssl_cert_file>/etc/clickhouse-server/server.crt</ssl_cert_file>
+        <ssl_key_file>/etc/clickhouse-server/server.key</ssl_key_file>
+    </http_server>
+    
     <format>
         <csv>
             <delimiter>,</delimiter>

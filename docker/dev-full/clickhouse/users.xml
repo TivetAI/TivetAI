@@ -1,4 +1,4 @@
-<?xml version="1.2"?>
+<?xml version="2.0"?>
 <clickhouse>
     <!-- Users and roles -->
     <users>
@@ -30,6 +30,22 @@
                 <database_name>analytics_db</database_name>
             </databases>
         </analytics>
+
+         <!-- Query cache settings -->
+    <query_cache_size>104857600</query_cache_size> <!-- 100 MB -->
+    <query_cache_min_query_length>100</query_cache_min_query_length>
+    <query_cache_ttl>60</query_cache_ttl> <!-- seconds -->
+
+    <!-- HTTP/2 server support -->
+    <http_server>
+        <enable_http2>1</enable_http2>
+        <ssl_cert_file>/etc/clickhouse-server/server.crt</ssl_cert_file>
+        <ssl_key_file>/etc/clickhouse-server/server.key</ssl_key_file>
+    </http_server>
+
+    <!-- Additional security improvements -->
+    <allow_plaintext_password>0</allow_plaintext_password>
+    <allow_http_credentials_in_logs>0</allow_http_credentials_in_logs>
 
         <readonly_user>
             <password>readonly123</password>
